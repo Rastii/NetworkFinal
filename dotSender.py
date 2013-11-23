@@ -11,7 +11,7 @@ def get_arguments():
 
 def get_textfile_blocks(text_file):
   try:
-    with f as open(text_file, 'r'):
+    with open(text_file, 'r') as f:
       data = f.read()
       blocks, remainder = divmod(len(data), 5000)
       return [data[x*5000:(x+1)*5000] for x in blocks] \
