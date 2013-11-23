@@ -19,10 +19,16 @@ def get_textfile_blocks(text_file):
   except:
     print "Invalid file specifi1ed -- unable to open file"
 
+
+def init_socket(dst_ip, t_delay):
+  sock = socket.socket(socket.AF_INET,
+                       socket.SOCK_DGRAM)
+  sock.settimeout(t_delay)
+  return sock
+
 def main():
     ip_addr, text_file = get_arguments()
-    print get_textfile_blocks(text_file)
-    
+    data = get_textfile_blocks(text_file)
   
 
 if __name__ == "__main__":
