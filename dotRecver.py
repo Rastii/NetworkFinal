@@ -29,18 +29,11 @@ def main():
     mysock.bind(('127.0.0.1', 31337))
 
     while True:
-        data, addr = mysock.recvfrom(5000)
+        data, addr = mysock.recvfrom(5034)
         seq_num, msg_hash, message = extract_message_contents(data)
-        print "SEQ_NUM: %d" % seq_num
-        print message
         is_valid_hash = check_hash(message, msg_hash)
         seq_num = struct.pack(">H", seq_num+1)
         send_ack(addr, mysock, seq_num, is_valid_hash)
-        #data = data[0:2]
-        #print data
-        #data = struct.pack(">H", data)
-        #print addr
-        #mysock.sendto(data, (addr[0], addr[1])) 
 
 if __name__ == "__main__":
     main()

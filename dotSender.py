@@ -41,26 +41,34 @@ def send_message(socket, dst_ip, dst_port, message, seq_num):
   message = pack(">H", seq_num) + msg_hash + message
   socket.sendto(message, (dst_ip,dst_port))
 
+def check_seq_error(expected_seq_num, data):
+  seq_num = unpack(">H", data[0:2])[0]
+  error = unpack(">B", data[2:3])
+  if error == 1:
+    print "The receiver received a corrupted message"
+    return False
+  elif seq_num != expected_seq_num:
+    print "The receiver returned an invalid sequence number"
+    return False
+  return True
+
 #Seq_num should be the send_message seq_num + 1
-def recv_ack(sock, seq_num):
-  global T_DELAY
+def recv_ack(sock, seq_num, message, dst_ip):
   global T_OFFLINE
+  global PORT
 
   counter = 5
   while True:
     try:
-      data,addr = sock.recvfrom(5000)
+      data,addr = sock.recvfrom(5034)
       if data is not None: 
         counter = 5
-      if unpack(">H", data[0:2])[0] == seq_num:
-        return True
-      else:
-        return False
+      return check_seq_error(seq_num, data)
     except socket.timeout:
       if counter >= T_OFFLINE:
-        print "Tried polling the receiver for %d seconds" % T_OFFLINE
         print "The receiver is not online"
         exit(1)
+      send_message(sock, dst_ip, PORT, message, seq_num-1)
       counter += T_DELAY
 
 def main():
@@ -73,7 +81,7 @@ def main():
   socket = init_socket(T_DELAY)
   for x in xrange(len(data)):
     send_message(socket, ip_addr, PORT, data[x], x)
-    while recv_ack(socket, x+1) is not True:
+    while recv_ack(socket, x+1,data[x], ip_addr) is not True:
       send_message(socket, ip_addr, PORT, data[x], x)
   print "Sent %s successfully" % text_file
 
