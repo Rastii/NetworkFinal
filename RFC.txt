@@ -91,11 +91,11 @@ Msg   |<-------------------------------------------------------
 Data Message
 
 
-            Bytes 0---2------------------------------34
+            Bytes 0-------2------------------------------34
 
-                 Sequence | hash of message
-                    #
-            Bytes 34---------------------------------....
+               Sequence # | hash of message
+                    
+            Bytes 34-------------------------------------
 		    
                      Message (up to 5000 bytes)
 
@@ -105,7 +105,7 @@ the sequence number and an md5 hash of the actual message.  After these first
 
 Ack Message
            
-            Bytes 0---2---3 
+          Bytes 0-----------2-----------3 
                  Ack Number | Error Flag
 
 The ack message is 3 bytes long and consists of two fields the ack number and the error flag.
