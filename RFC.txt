@@ -1,0 +1,124 @@
+                             RFC For .2.mail
+
+Protocol Designed By: Andrew Calvano and Lukyan Hritsko
+
+
+---------------------------Protocol Overview----------------------------------
+
+In a world without data centers computers rely on an internet known as the .2. 
+Internet.  The .2.mail protocol is a protocol built specifically for this type
+of internet and makes some assumptions as a result of this.
+
+Assumption 1.) The sender and receiver each contain the Internet protocol stack. 
+
+Assumption 2.) The sender always knows the IP address of the receiver. 
+
+Assumption 3.) Messages are unformatted ASCII text of no more than 5000 characters including spaces. 
+
+Assumption 4.) A receiver may not always have the .2.mail service running. 
+
+Assumption 5.) A receiver may not always be online. 
+
+Using these assumptions this RFC lays out the implementation notes required
+to make a sucessful implementation of the .2.mail protocol.
+
+
+---------------------Peer Message Exchange and Actions--------------------
+
+This section describes the messages exchanged between two peers in a .2. 
+internet using the .2.mail protocol.  We will illustrate with an FSM for
+a peer acting as a receiver and a peer acting as a sender.
+
+Sender FSM:
+
+S     |          Send data packet with data size <= 5000, 
+      |          hash of message data, and sequence number i
+----->|-------------------------------------------------------
+Reset |                                                       |
+From  |                                                       |
+Time  |                                                       |
+Out   |<-------------------------------------------------------
+      |
+      |
+      |          Wait for Ack message from recipient with sequence number i + 1,
+      |          Start offline timer of 20 seconds, start polling timer of 5 
+      |          seconds.  Ignore messages, with invalid sequence numbers.
+      |--------------------------------------------------------
+      |                                                        |
+      |                                                        |
+      |<------------------------------------------------------- 
+      |
+      |
+
+Receiver FSM:
+
+R     |          
+      |     Recv a data message with sequence number i.  Compute hash
+      |     of the data message body and compare with hash in header.
+      |    
+----->|-------------------------------------------------------
+Reset |                                                       |
+From  |                                                       |
+Fin   |                                                       |
+Msg   |<-------------------------------------------------------
+      |
+      |
+      |        
+      |       
+      |      If there is a bad hash, send an error flag in ACK
+      |      message to the sender.
+      |--------------------------------------------------------
+      |                                                        |
+      |                                                        |
+      |<------------------------------------------------------- 
+      |
+      |   Recv a data message with sequence number i+1.  Compute hash of the data
+      |   message body and compare with hash in header.
+      |-------------------------------------------------------
+      |                                                       |
+      |                                                       |
+      |<------------------------------------------------------
+      
+      
+      
+
+
+--------------------------------------------------------------------------
+
+                                Message Structure
+
+
+Data Message
+
+
+            Bytes 0---2------------------------------34
+
+                 Sequence | hash of message
+                    #
+            Bytes 34---------------------------------....
+		    
+                     Message (up to 5000 bytes)
+
+The data message consists of a header and a data portion.  The header contains
+the sequence number and an md5 hash of the actual message.  After these first
+34 bytes is the actual message which can be up to 5000 bytes long.
+
+Ack Message
+           
+            Bytes 0---2---3 
+                 Ack Number | Error Flag
+
+The ack message is 3 bytes long and consists of two fields the ack number and the error flag.
+The ack number is the sequence number of the received data message + 1.  For every,
+data message sent to the receiever there is an ack message sent to the sender who will
+not send the next message in sequence until receiving the correct ack number.
+The error flag is set to 1 and is sent to the sender to let the sender know that the message
+provided did not match the hash of the message in the data message header. 
+
+
+------------------------Semantics of the .2.mail Protocol------------------------------
+
+
+
+
+
