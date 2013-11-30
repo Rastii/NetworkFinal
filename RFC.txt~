@@ -52,7 +52,35 @@ Out   |<-------------------------------------------------------
 
 Receiver FSM:
 
-
+R     |          
+      |     Recv a data message with sequence number i.  Compute hash
+      |     of the data message body and compare with hash in header.
+      |    
+----->|-------------------------------------------------------
+Reset |                                                       |
+From  |                                                       |
+Fin   |                                                       |
+Msg   |<-------------------------------------------------------
+      |
+      |
+      |        
+      |       
+      |      If there is a bad hash, send an error flag in ACK
+      |      message to the sender.
+      |--------------------------------------------------------
+      |                                                        |
+      |                                                        |
+      |<------------------------------------------------------- 
+      |
+      |   Recv a data message with sequence number i+1.  Compute hash of the data
+      |   message body and compare with hash in header.
+      |-------------------------------------------------------
+      |                                                       |
+      |                                                       |
+      |<------------------------------------------------------
+      
+      
+      
 
 
 --------------------------------------------------------------------------
@@ -63,27 +91,34 @@ Receiver FSM:
 Data Message
 
 
-            Bytes 0---2------------------------------34
+            Bytes 0-------2------------------------------34
 
-                 Sequence | hash of message
-                    #
-            Bytes 34---------------------------------....
+               Sequence # | hash of message
+                    
+            Bytes 34-------------------------------------
 		    
                      Message (up to 5000 bytes)
 
+The data message consists of a header and a data portion.  The header contains
+the sequence number and an md5 hash of the actual message.  After these first
+34 bytes is the actual message which can be up to 5000 bytes long.
+
 Ack Message
            
-            Bytes 0---2---3 
-                 Sequence Number | Error Flag
+          Bytes 0-----------2-----------3 
+                 Ack Number | Error Flag
+
+The ack message is 3 bytes long and consists of two fields the ack number and the error flag.
+The ack number is the sequence number of the received data message + 1.  For every,
+data message sent to the receiever there is an ack message sent to the sender who will
+not send the next message in sequence until receiving the correct ack number.
+The error flag is set to 1 and is sent to the sender to let the sender know that the message
+provided did not match the hash of the message in the data message header. 
 
 
+------------------------Semantics of the .2.mail Protocol------------------------------
 
-
-
-Implementation Notes: Taking into account the assumptions laid out for us
-in a .2. Internet network a developer implementing the .2. mail protocol
-must also make sure the following requirements are carefully and correctly
-fulfilled. An example implementation fulfilling the requirements will follow.
+Using the above types of messages we set out to satisfy the following requirements:
 
 
 

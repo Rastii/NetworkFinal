@@ -118,7 +118,57 @@ provided did not match the hash of the message in the data message header.
 
 ------------------------Semantics of the .2.mail Protocol------------------------------
 
+Using the above types of messages we set out to satisfy the following requirements:
 
 
+1.)    No use of services beyond those provided by the sender and receiver are allowed (that is, no service provided by a server may be used).
+2.)    A sender must be able to send a text message to an online receiver.
+3.)    The received message must be the same as the sent message (that is, it must not be corrupted).
+4.)    The received message must indicate who the sender is (by IP address).
+5.)    If a receiver is offline when a server has a message to send to it, the message must be sent by the sender within t_delay seconds of the receiver coming back online.
+        a.) Polling the receiver using a TCP connection request is not allowed 
+6.)    If a receiver is offline for more than t_offline seconds, the message shall not be delivered (that is, the sender should drop the message).
+        a.) You may assume that t_offline is an even multiple of t_delay 
+7.)    The protocol must be reasonably tolerant of rare lost packets 
 
+The time out schedule for the .2. mail protocol is as follows:
+
+A sender will repeatedly try to send a message to a receiver every 5 seconds.  The sender will continually
+do this until the sender receives a correctly formatted ACK message from the recipient.
+
+The sender will do this 4 times before timeing out completely and disregarding the message for a total
+time of 20 seconds.
+
+Every time a correctly formatted ACK message is received the timer is completely reset.
+
+This also combats the issue when the receiver is not online because the sender will "poll" the receiver 
+continuously every 5 seconds by sending the message over again.  We do not use a TCP connection for this
+but rather the same data messages that send regular messages with an added timer which are over UDP.
+
+Sequence Numbers and Lost Packets:
+
+A sender will send a message initally with a sequence number of i.  For every message sent to the receiver,
+the receiver must return an ACK or FIN message to the sender with a sequence number of i+1.
+
+The sender will continuously loop until timeout, until a correct sequence number is received in a correctly
+formatted ACK message.
+
+Identification:  
+
+The UDP datagram implicitly includes the IP address of the sender.  We use this information
+to satisfy requirement 5.
+
+Corruption:
+
+Each data message includes an MD5 hash of the message in the body of the datagram.  The receiver
+compute the hash of the message body each time it receives a message and compares it to the hash
+in the header of the datagram. 
+
+If the header hash is correct, communication continues as usual.  If it is incorrect, the receiver
+sends an ACK message with the correct sequence number but with the error flag set to 1.  This tells
+the sender that something was wrong and the sender will then resend the message again.
+
+-------------------------------------End of RFC------------------------------------------------------------
+           
+ 
 
