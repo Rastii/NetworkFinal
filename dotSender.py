@@ -7,6 +7,7 @@ from struct import pack,unpack
 T_DELAY = 5
 T_OFFLINE = 20
 PORT = 31337
+MAX_UINT = 0xffffffff
 
 def get_arguments():
     if len(sys.argv) != 3:
@@ -34,16 +35,24 @@ def init_socket(t_delay):
 def hash_message(message):
   h = hashlib.md5()
   h.update(message)
-  return h.hexdigest()
+  return h.digest()
 
-def send_message(socket, dst_ip, dst_port, message, seq_num):
+def send_message(socket, dst_ip, message, seq_num):
+  global PORT
   msg_hash = hash_message(message)
-  message = pack(">H", seq_num) + msg_hash + message
-  socket.sendto(message, (dst_ip,dst_port))
+  message = pack("!I", seq_num) + msg_hash + message
+  socket.sendto(message, (dst_ip,PORT))
+
+def send_fin_message(socket, dst_ip, message):
+  global MAX_UINT
+  global PORT
+  msg_hash = hash_message(message)
+  message = pack("!I", MAX_UINT) + msg_hash + message
+  socket.sendto(message, (dst_ip,PORT))
 
 def check_seq_error(expected_seq_num, data):
-  seq_num = unpack(">H", data[0:2])[0]
-  error = unpack(">B", data[2:3])
+  seq_num = unpack("!I", data[0:4])[0]
+  error = unpack("!B", data[4:5])
   if error == 1:
     print "The receiver received a corrupted message"
     return False
@@ -60,7 +69,7 @@ def recv_ack(sock, seq_num, message, dst_ip):
   counter = 5
   while True:
     try:
-      data,addr = sock.recvfrom(5034)
+      data,addr = sock.recvfrom(5020)
       if data is not None: 
         counter = 5
       return check_seq_error(seq_num, data)
@@ -79,10 +88,14 @@ def main():
   ip_addr, text_file = get_arguments()
   data = get_textfile_blocks(text_file)
   socket = init_socket(T_DELAY)
-  for x in xrange(len(data)):
-    send_message(socket, ip_addr, PORT, data[x], x)
-    while recv_ack(socket, x+1,data[x], ip_addr) is not True:
-      send_message(socket, ip_addr, PORT, data[x], x)
+  for x in xrange(len(data)-1):
+    send_message(socket, ip_addr, data[x], x)
+    while recv_ack(socket, x+1, data[x], ip_addr) is not True:
+      send_message(socket, ip_addr, data[x], x)
+
+  send_fin_message(socket, ip_addr, data[-1])
+  while recv_ack(socket, 0, data[-1], ip_addr) is not True:
+    send_fin_message(socket, ip_addr, data[-1])
   print "Sent %s successfully" % text_file
 
 if __name__ == "__main__":
