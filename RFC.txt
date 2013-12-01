@@ -48,6 +48,20 @@ Out   |<-------------------------------------------------------
       |                                                        |
       |<------------------------------------------------------- 
       |
+      |           No more message is left to send.  Send
+      |           a FIN message.
+      |--------------------------------------------------------
+      |                                                        |
+      |                                                        |
+      |<-------------------------------------------------------
+      |
+      |           Receive a correctly formatted FIN ACK msg
+      |           from receiver.  Exit.
+      |--------------------------------------------------------
+      |                                                        |
+      |                                                        |
+      |<-------------------------------------------------------
+      |
       |
 
 Receiver FSM:
@@ -78,7 +92,13 @@ Msg   |<-------------------------------------------------------
       |                                                       |
       |                                                       |
       |<------------------------------------------------------
-      
+      |
+      |
+      |  Receive a FIN message from sender. Send a Fin ACK and reset.
+      |-------------------------------------------------------
+      |                                                       |
+      |                                                       |
+      |<------------------------------------------------------ 
       
       
 
@@ -91,11 +111,11 @@ Msg   |<-------------------------------------------------------
 Data Message
 
 
-            Bytes 0-------2------------------------------34
+            Bytes 0-------4------------------------------36
 
                Sequence # | hash of message
                     
-            Bytes 34-------------------------------------
+            Bytes 36-------------------------------------
 		    
                      Message (up to 5000 bytes)
 
@@ -105,16 +125,28 @@ the sequence number and an md5 hash of the actual message.  After these first
 
 Ack Message
            
-          Bytes 0-----------2-----------3 
+          Bytes 0-----------4-----------5 
                  Ack Number | Error Flag
 
-The ack message is 3 bytes long and consists of two fields the ack number and the error flag.
+The ack message is 5 bytes long and consists of two fields the ack number and the error flag.
 The ack number is the sequence number of the received data message + 1.  For every,
 data message sent to the receiever there is an ack message sent to the sender who will
 not send the next message in sequence until receiving the correct ack number.
 The error flag is set to 1 and is sent to the sender to let the sender know that the message
 provided did not match the hash of the message in the data message header. 
 
+
+Fin Message
+
+A FIN Message is the exact same thing as an ACK message except that the ACK number will be 
+set to 0xFFFFFFFF.
+
+Fin ACK Message
+
+A FIN ACK message is also a modification of the Ack message.  The reciever will send an
+ACK message with sequence number 0 to the reciever.  If the sender is expecting a FIN
+ACK message at this point, then the sender will receive this determine its correct, and
+exit.  The reciever will then reset.
 
 ------------------------Semantics of the .2.mail Protocol------------------------------
 
@@ -152,6 +184,13 @@ the receiver must return an ACK or FIN message to the sender with a sequence num
 
 The sender will continuously loop until timeout, until a correct sequence number is received in a correctly
 formatted ACK message.
+
+Completion of Communication:
+
+Once the sender has finished sending the contents of its message from the text file,
+it will send a FIN message to let the receiver know not to expect any more data from
+the sender.  The sender will then block and wait for a FIN ACK message from the 
+receiver.  Once this FIN ACK message is received the sender wil exit.
 
 Identification:  
 
