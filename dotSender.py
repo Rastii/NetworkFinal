@@ -77,7 +77,7 @@ def recv_ack(sock, seq_num, message, dst_ip):
       if counter >= T_OFFLINE:
         print "The receiver is not online"
         exit(1)
-      send_message(sock, dst_ip, PORT, message, seq_num-1)
+      send_message(sock, dst_ip, message, seq_num-1)
       counter += T_DELAY
 
 def main():
