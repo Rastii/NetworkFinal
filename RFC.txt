@@ -111,17 +111,17 @@ Msg   |<-------------------------------------------------------
 Data Message
 
 
-            Bytes 0-------4------------------------------36
+            Bytes 0-------4------------------------------20
 
                Sequence # | hash of message
                     
-            Bytes 36-------------------------------------
+            Bytes 20-------------------------------------
 		    
                      Message (up to 5000 bytes)
 
 The data message consists of a header and a data portion.  The header contains
 the sequence number and an md5 hash of the actual message.  After these first
-34 bytes is the actual message which can be up to 5000 bytes long.
+20 bytes is the actual message which can be up to 5000 bytes long.
 
 Ack Message
            
