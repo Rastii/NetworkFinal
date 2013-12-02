@@ -10,12 +10,6 @@ SERVER_PORT = 31337
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(('127.0.0.1', 31338))
 
-def extract_message_contents(message):
-  return (struct.unpack("!I", message[0:4])[0], 
-          message[4:20], 
-          message[20:])
-
-
 loops = 1
 while True:
   #first we receive from the sender
