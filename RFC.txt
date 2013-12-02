@@ -138,7 +138,7 @@ provided did not match the hash of the message in the data message header.
 
 Fin Message
 
-A FIN Message is the exact same thing as an ACK message except that the ACK number will be 
+A FIN Message is the exact same thing as a Data message except that the sequence number will be 
 set to 0xFFFFFFFF.
 
 Fin ACK Message
