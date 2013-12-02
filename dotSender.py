@@ -56,7 +56,7 @@ def send_fin_message(socket, dst_ip, message):
 def check_seq_error(expected_seq_num, data):
   seq_num = unpack("!I", data[0:4])[0]
   error = unpack("!B", data[4:5])[0]
-  if error == 1:
+  if error != 0:
     print "The receiver received a corrupted message, resending packet."
     return False
   elif seq_num != expected_seq_num:
@@ -91,14 +91,14 @@ def main():
   ip_addr, text_file = get_arguments()
   data = get_textfile_blocks(text_file)
   socket = init_socket(T_DELAY)
-  for x in xrange(len(data)-1):
+  for x in xrange(len(data)):
     send_message(socket, ip_addr, data[x], x)
     while recv_ack(socket, x+1, data[x], ip_addr) is not True: #Will continue with corruption
       send_message(socket, ip_addr, data[x], x)
 
-  send_fin_message(socket, ip_addr, data[-1])
-  while recv_ack(socket, 0, data[-1], ip_addr) is not True:
-    send_fin_message(socket, ip_addr, data[-1])
+  send_fin_message(socket, ip_addr, "")
+  if recv_ack(socket, 0, data[-1], ip_addr) is not True:
+    print "Sent %s, with a warning: FIN-ACK may have been corrupted, server still has valid data"
   print "Sent %s successfully" % text_file
 
 if __name__ == "__main__":
