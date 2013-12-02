@@ -31,7 +31,7 @@ CONNECTION = {}
 
 def write_p(queue, fname):
   global MAX_UINT
-  with open(fname, "w") as fp:
+  with open('emails/' + fname, "w") as fp:
     while True:
       data = queue.get()
       fp.write(data['message'])
