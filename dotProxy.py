@@ -17,7 +17,7 @@ while True:
 
   if int(random()*2) & 1 == 1: #let's modify some bits..
     random_val = int(random()*len(data))-1
-    data = data[0:random_val] + pack("!B",int(random()*255)) + data[random_val:]
+    data = data[0:random_val] + pack("!B",int(random()*255)) + data[random_val+1:]
   #now send to our server
   sock.sendto(data, (SERVER_IP,SERVER_PORT))
 

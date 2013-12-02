@@ -23,11 +23,10 @@ def main():
   file_name = sys.argv[1]
   print "RUNNING TEST ON %s" % file_name
   print "USING DOTSENDER"
-  for x in xrange(25):
+  for x in xrange(500):
     proc = subprocess.Popen(['python', 'dotSender.py', '127.0.0.1', file_name])
     proc.wait()
-    #system('python dotSender.py 127.0.0.1 ' + file_name)
-  system('mv recvEmail* recv_tests/')
+    subprocess.call('mv recvEmail* recv_tests/', shell=True)
   print "END DOTSENDER"
   sleep(1)
 

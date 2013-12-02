@@ -6,7 +6,8 @@ from struct import pack,unpack
 
 T_DELAY = 5
 T_OFFLINE = 20
-PORT = 31337
+#PORT = 31337
+PORT = 31338 # proxy time!
 MAX_UINT = 0xffffffff
 
 def get_arguments():
@@ -16,6 +17,7 @@ def get_arguments():
     return (sys.argv[1], sys.argv[2])
 
 def get_textfile_blocks(text_file):
+  print "Reading contents of file %s" % text_file
   try:
     with open(text_file, 'r') as f:
       data = f.read()
@@ -24,6 +26,7 @@ def get_textfile_blocks(text_file):
              + [data[(blocks*5000):]]
   except:
     print "Invalid file specifi1ed -- unable to open file"
+    exit(1)
 
 
 def init_socket(t_delay):
@@ -54,10 +57,10 @@ def check_seq_error(expected_seq_num, data):
   seq_num = unpack("!I", data[0:4])[0]
   error = unpack("!B", data[4:5])[0]
   if error == 1:
-    print "The receiver received a corrupted message"
+    print "The receiver received a corrupted message, resending packet."
     return False
   elif seq_num != expected_seq_num:
-    print "The receiver returned an invalid sequence number"
+    print "The receiver returned an invalid sequence number, resending packet."
     return False
   return True
 
@@ -90,7 +93,7 @@ def main():
   socket = init_socket(T_DELAY)
   for x in xrange(len(data)-1):
     send_message(socket, ip_addr, data[x], x)
-    while recv_ack(socket, x+1, data[x], ip_addr) is not True:
+    while recv_ack(socket, x+1, data[x], ip_addr) is not True: #Will continue with corruption
       send_message(socket, ip_addr, data[x], x)
 
   send_fin_message(socket, ip_addr, data[-1])
