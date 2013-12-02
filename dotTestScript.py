@@ -20,6 +20,7 @@ def main():
     exit(1)
 
   expected_md5 = md5_hash_file(sys.argv[1])
+  '''
   file_name = sys.argv[1]
   print "RUNNING TEST ON %s" % file_name
   print "USING DOTSENDER"
@@ -29,7 +30,7 @@ def main():
     subprocess.call('mv recvEmail* recv_tests/', shell=True)
   print "END DOTSENDER"
   sleep(1)
-
+  '''
   print "BEGIN CHECKING MD5SUMS"
   for f in get_file_names(sys.argv[2]):
     print "Testing file %s" % f
