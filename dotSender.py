@@ -33,6 +33,13 @@ def get_arguments():
       exit(1)
     return (sys.argv[1], sys.argv[2])
 
+#==============================================================
+#=  Function returns the contents in text_file split into 5k  =
+#=  bytes                                                     =
+#=------------------------------------------------------------=
+#=  Inputs: the textfile you wish to send                     =
+#=  Returns: The textfile split into 5k byte chunks           =
+#=============================================================
 def get_textfile_blocks(text_file):
   print "Reading contents of file %s" % text_file
   try:
@@ -82,9 +89,10 @@ def check_seq_error(expected_seq_num, data):
   return True
 
 #Seq_num should be the send_message seq_num + 1
-def recv_ack(sock, seq_num, message, dst_ip):
+def recv_ack(sock, expected_seq_num, message, dst_ip):
   global T_OFFLINE
   global PORT
+  global MAX_UINT
 
   counter = 5
   while True:
@@ -92,12 +100,15 @@ def recv_ack(sock, seq_num, message, dst_ip):
       data,addr = sock.recvfrom(5020)
       if data is not None: 
         counter = 5
-      return check_seq_error(seq_num, data)
+      return check_seq_error(expected_seq_num, data)
     except socket.timeout:
       if counter >= T_OFFLINE:
         print "The receiver is not online"
         exit(1)
-      send_message(sock, dst_ip, message, seq_num-1)
+      if expected_seq_num == 0:
+        send_message(sock, dst_ip, message, MAX_UINT)
+      else:
+        send_message(sock, dst_ip, message, expected_seq_num-1)
       counter += T_DELAY
 
 def main():
@@ -108,11 +119,12 @@ def main():
   ip_addr, text_file = get_arguments()
   data = get_textfile_blocks(text_file)
   socket = init_socket(T_DELAY)
+  #We first get all of our data
   for x in xrange(len(data)-1):
     send_message(socket, ip_addr, data[x], x)
     while recv_ack(socket, x+1, data[x], ip_addr) is not True: #Will continue with corruption
       send_message(socket, ip_addr, data[x], x)
-
+  #And now we receive our fin ack
   send_fin_message(socket, ip_addr, data[-1])
   while recv_ack(socket, 0, data[-1], ip_addr) is not True:
     send_fin_message(socket, ip_addr, data[-1])
